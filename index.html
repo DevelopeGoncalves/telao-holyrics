@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TELÃO UNIFICADO (KIDS + CAR)</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { 
+            margin: 0; padding: 0; 
+            
+            /* --- ALTERAÇÃO AQUI: CONFIGURAÇÃO DO FUNDO --- */
+            /* Troque 'fundo.jpg' pelo link da sua imagem ou caminho do arquivo */
+            background: url('img/fundo.jpg') no-repeat center center fixed;
+            background-size: cover; /* Faz a imagem cobrir tudo */
+            background-color: #000; /* Cor de fundo caso a imagem não carregue */
+            
+            overflow: hidden; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex; align-items: center; justify-content: center;
+            height: 100vh; width: 100vw;
+            cursor: none;
+        }
+
+        /* CARD DE AVISO (BASE) */
+        #alert-box {
+            display: none; 
+            border: 8px solid #fff;
+            border-radius: 60px;
+            padding: 40px;
+            width: 90%;
+            max-width: 1200px;
+            text-align: center;
+            color: white;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* ESTILO KIDS (Vermelho) */
+        .style-kids {
+            background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
+            box-shadow: 0 0 200px rgba(220, 38, 38, 0.8);
+        }
+        .style-kids .room-badge { color: #b91c1c; }
+
+        /* ESTILO CARRO (Azul Escuro) */
+        .style-car {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            box-shadow: 0 0 200px rgba(59, 130, 246, 0.8);
+            border-color: #fbbf24; /* Borda Amarela */
+        }
+        .style-car .room-badge { color: #0f172a; background: #fbbf24; }
+        .style-car .alert-header { color: #fbbf24; border-bottom-color: rgba(251, 191, 36, 0.3); }
+
+        /* Animações */
+        .fade-in { animation: zoomIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        .fade-out { animation: zoomOut 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+
+        @keyframes zoomIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes zoomOut { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.1); opacity: 0; } }
+
+        .alert-header {
+            font-size: 3.5rem; font-weight: 900; text-transform: uppercase;
+            margin-bottom: 30px; text-shadow: 4px 4px 10px rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center; gap: 20px;
+            color: #fef2f2;
+            border-bottom: 2px solid rgba(255,255,255,0.2);
+            padding-bottom: 20px;
+        }
+
+        .alert-content { display: flex; align-items: center; justify-content: center; gap: 60px; }
+
+        /* IMAGEM E ÍCONE */
+        .media-container { width: 380px; height: 380px; display:flex; align-items:center; justify-content:center; }
+        
+        .kid-photo {
+            width: 100%; height: 100%;
+            border-radius: 50%; border: 15px solid white;
+            object-fit: cover;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            background: #fff;
+        }
+
+        .car-icon-box {
+            width: 300px; height: 300px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            border: 10px solid #fbbf24;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10rem; color: #fbbf24;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .alert-text { text-align: left; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .alert-label { font-size: 1.8rem; text-transform: uppercase; opacity: 0.9; margin-bottom: 10px; font-weight: 600; letter-spacing: 1px; }
+        
+        .main-text { 
+            font-size: 5rem; font-weight: 800; line-height: 1.1; 
+            margin-bottom: 25px; text-shadow: 3px 3px 15px rgba(0,0,0,0.6); color: #fff; 
+        }
+
+        .plate-text {
+            font-family: 'Courier New', monospace;
+            background: white; color: black; padding: 10px 30px;
+            border-radius: 10px; border: 5px solid black;
+            display: inline-block; letter-spacing: 5px;
+        }
+        
+        .room-badge { 
+            background: white; padding: 10px 40px; border-radius: 80px; 
+            font-size: 2.5rem; font-weight: 900; display: inline-block;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            align-self: flex-start;
+        }
+
+        #queue-indicator {
+            position: absolute; bottom: 20px; right: 40px;
+            font-size: 1.5rem; color: rgba(255,255,255,0.7);
+            font-weight: bold; display: none;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body onclick="enableAudioContext()">
+
+    <div id="alert-box" class="style-kids">
+        <div class="alert-header" id="header-title">
+            <i class="fas fa-exclamation-circle"></i> Atenção Pais
+        </div>
+        
+        <div class="alert-content">
+            <div class="media-container">
+                <img id="photo" class="kid-photo" src="" alt="Foto" style="display:none;">
+                <div id="car-icon" class="car-icon-box" style="display:none;">
+                    <i class="fas fa-car-side"></i>
+                </div>
+            </div>
+
+            <div class="alert-text">
+                <div class="alert-label" id="label-top">Favor comparecer à:</div>
+                <div class="room-badge" id="info-badge">SALA</div>
+                
+                <div class="alert-label" id="label-bottom" style="margin-top:20px;">Responsável por:</div>
+                <div class="main-text" id="main-name">NOME</div>
+            </div>
+        </div>
+        <div id="queue-indicator"><i class="fas fa-layer-group"></i> +<span id="queue-count">0</span> na fila</div>
+    </div>
+
+    <audio id="alertSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script>
+        // CONFIG
+        const TEMPO_EXIBICAO = 7000;   // 7 segundos de tempo 
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBI5S5ciZioheWabi0W0Ii_r0e3RsYm3iw",
+            authDomain: "cadastro-final-cc77f.firebaseapp.com",
+            databaseURL: "https://cadastro-final-cc77f-default-rtdb.firebaseio.com",
+            projectId: "cadastro-final-cc77f",
+            storageBucket: "cadastro-final-cc77f.firebasestorage.app",
+            messagingSenderId: "229086987694",
+            appId: "1:229086987694:web:52f1a32f4b1a9f5be2743f",
+            measurementId: "G-9F9WBCMH6Y"
+        };
+        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        const db = firebase.database();
+
+        let audioCtxEnabled = false;
+        const synth = window.speechSynthesis;
+        let alertQueue = [];
+        let isShowing = false;
+        let processedKeys = new Set();
+
+        function enableAudioContext() {
+            if(audioCtxEnabled) return;
+            const audio = document.getElementById('alertSound');
+            audio.volume = 0; 
+            audio.play().then(() => {
+                audio.pause(); audio.currentTime = 0; audio.volume = 1;
+                audioCtxEnabled = true;
+                if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = getVoices;
+                getVoices();
+            }).catch(e => console.log("Aguardando clique..."));
+        }
+
+        // --- LISTENER KIDS ---
+        db.ref('chamados').on('child_added', (snapshot) => {
+            handleNewAlert(snapshot, 'kid');
+        });
+
+        // --- LISTENER ESTACIONAMENTO ---
+        db.ref('estacionamento').on('child_added', (snapshot) => {
+            handleNewAlert(snapshot, 'car');
+        });
+
+        function handleNewAlert(snapshot, type) {
+            const data = snapshot.val();
+            const key = snapshot.key;
+            const now = new Date().getTime();
+            // 5 minutos de tolerância
+            if (data.timestamp && (now - data.timestamp < 300000)) {
+                if(!processedKeys.has(key)) {
+                    processedKeys.add(key);
+                    data.internalType = type; // Marca o tipo internamente
+                    enqueueAlert(data);
+                }
+            }
+        }
+
+        function enqueueAlert(data) {
+            alertQueue.push(data);
+            updateQueueIndicator();
+            processQueue();
+        }
+
+        function processQueue() {
+            if(isShowing || alertQueue.length === 0) return;
+            isShowing = true;
+            const current = alertQueue.shift();
+            updateQueueIndicator();
+            displayAlert(current);
+        }
+
+        function updateQueueIndicator() {
+            const el = document.getElementById('queue-indicator');
+            const countEl = document.getElementById('queue-count');
+            if(alertQueue.length > 0) {
+                el.style.display = 'block'; countEl.innerText = alertQueue.length;
+            } else { el.style.display = 'none'; }
+        }
+
+        function displayAlert(data) {
+            const box = document.getElementById('alert-box');
+            
+            // ELEMENTOS
+            const headerTitle = document.getElementById('header-title');
+            const photoEl = document.getElementById('photo');
+            const carIconEl = document.getElementById('car-icon');
+            const labelTop = document.getElementById('label-top');
+            const infoBadge = document.getElementById('info-badge');
+            const labelBottom = document.getElementById('label-bottom');
+            const mainName = document.getElementById('main-name');
+
+            if (data.internalType === 'car') {
+                // --- CONFIGURAÇÃO CARRO ---
+                box.className = 'style-car';
+                headerTitle.innerHTML = '<i class="fas fa-car"></i> UTILIDADE PÚBLICA';
+                
+                photoEl.style.display = 'none';
+                carIconEl.style.display = 'flex';
+
+                labelTop.innerText = "Veículo Solicitado:";
+                infoBadge.innerText = data.model; // Ex: GOL PRATA
+                
+                labelBottom.innerText = "Placa:";
+                mainName.innerHTML = `<span class="plate-text">${data.plate}</span>`; // PLACA ESTILIZADA
+
+                playAlertSound(`Atenção proprietário do veículo ${data.model}, placa ${data.plate}. Compareça ao estacionamento.`);
+
+            } else {
+                // --- CONFIGURAÇÃO KIDS ---
+                box.className = 'style-kids';
+                headerTitle.innerHTML = '<i class="fas fa-exclamation-circle"></i> ATENÇÃO PAIS';
+                
+                carIconEl.style.display = 'none';
+                photoEl.style.display = 'block';
+
+                // Lógica de Foto
+                let src = data.photoUrl;
+                if (!src.startsWith('http') && !src.startsWith('data:')) {
+                    let cleanName = src.replace('img/', '');
+                    src = 'img/' + cleanName;
+                }
+                photoEl.onerror = () => { photoEl.src = `https://ui-avatars.com/api/?name=${data.kidName}&background=random&size=300`; };
+                photoEl.src = src;
+
+                labelTop.innerText = "Favor comparecer à:";
+                infoBadge.innerText = data.roomName;
+                
+                labelBottom.innerText = "Responsável por:";
+                mainName.innerHTML = data.kidName;
+
+                playAlertSound(`Atenção pais. Solicitamos a presença do responsável por ${data.kidName}, na sala ${data.roomName}.`);
+            }
+
+            // Animação
+            box.classList.remove('fade-out');
+            box.classList.add('fade-in');
+            box.style.display = 'block';
+
+            setTimeout(() => { closeAlert(); }, TEMPO_EXIBICAO);
+        }
+
+        function closeAlert() {
+            const box = document.getElementById('alert-box');
+            box.classList.remove('fade-in');
+            box.classList.add('fade-out');
+            setTimeout(() => {
+                box.style.display = 'none';
+                isShowing = false;
+                processQueue();
+            }, 600);
+        }
+
+        function getVoices() {
+            const voices = synth.getVoices();
+            return voices.find(v => v.name.includes('Google') && v.lang.includes('pt-BR')) || voices[0];
+        }
+
+        function playAlertSound(textToSpeak) {
+            const audio = document.getElementById('alertSound');
+            if(audioCtxEnabled) {
+                audio.play().catch(e => {});
+                setTimeout(() => {
+                    synth.cancel();
+                    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+                    utterance.voice = getVoices();
+                    utterance.lang = 'pt-BR';
+                    synth.speak(utterance);
+                }, 1500);
+            }
+        }
+    </script>
+</body>
+</html>
