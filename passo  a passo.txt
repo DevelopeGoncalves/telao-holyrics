@@ -1,0 +1,71 @@
+Para configurar esse arquivo no Holyrics v2.26, o melhor método é adicioná-lo como um item de "Navegador de Internet" na sua lista de mídia ou nos favoritos. Assim, ele funcionará como um slide "vivo" (com relógio e alertas) que você clica quando quer exibir o fundo de espera.
+
+Siga este passo a passo exato:
+
+Parte 1: Preparação dos Arquivos (No Windows)
+Antes de abrir o Holyrics, vamos garantir que o arquivo esteja no lugar certo para não dar erro de imagem.
+
+Crie uma Pasta Fixa:
+
+Vá em Documentos ou C: e crie uma pasta chamada TelaoIgreja.
+
+Caminho sugerido: C:\TelaoIgreja\
+
+Salve os Arquivos:
+
+Pegue o código HTML completo (aquele último que te mandei com o relógio) e salve dentro dessa pasta com o nome: index.html.
+
+Pegue a imagem que você quer de fundo, renomeie para fundo.jpg e coloque nessa mesma pasta.
+
+Atenção: Certifique-se que no código HTML a linha do background esteja assim: background: url('fundo.jpg') ...
+
+Copie o Endereço:
+
+Abra a pasta, segure a tecla SHIFT do teclado, clique com o botão direito no arquivo index.html e escolha "Copiar como caminho".
+
+O link será algo como: "C:\TelaoIgreja\index.html". (Vamos precisar disso agora).
+
+Parte 2: Configurando no Holyrics v2.26
+Agora vamos criar um "botão" para esse telão.
+
+Abra o Holyrics.
+
+No painel esquerdo (onde ficam as músicas/lista de reprodução), clique na aba Mídia (se não tiver a aba, vá no menu Exibir > Mídia).
+
+Clique no botão + (Novo) ou clique com o botão direito na lista vazia e selecione Nova Mídia.
+
+Escolha a opção: Navegador de Internet (ou Web Browser).
+
+Vai abrir uma janela de configuração:
+
+Nome: Digite Telão Espera (Relógio).
+
+URL / Endereço: Apague o http://... que estiver lá e cole o caminho que você copiou.
+
+Ajuste Importante: O caminho deve começar com file:///.
+
+Se você colou "C:\TelaoIgreja\index.html", mude para ficar assim: file:///C:/TelaoIgreja/index.html (Note as barras invertidas /).
+
+Clique em OK ou Salvar.
+
+Parte 3: Como Usar no Culto
+Agora você tem um item na sua lista chamado "Telão Espera".
+
+Para Ativar:
+
+Sempre que o telão estiver "livre" (antes do culto, nos intervalos ou no final), dê dois cliques nesse item "Telão Espera" na lista de Mídia.
+
+Ele vai preencher o telão com a sua imagem de fundo e o relógio contando os segundos.
+
+Quando chegar um Alerta:
+
+Como o arquivo está rodando no telão, o alerta (criança/carro) vai aparecer automaticamente por cima da imagem, tocar o som e sumir depois de 7 segundos, voltando para a imagem de fundo.
+
+Para Sair:
+
+Basta clicar em qualquer música, versículo ou apertar o botão de "Logo" (F5/F6) para tirar o telão de espera.
+
+Dica de Ouro (Áudio)
+O navegador interno do Holyrics às vezes bloqueia o som automático na primeira vez.
+
+Teste antes do culto: Coloque o "Telão Espera" no ar. Se tiver como, clique uma vez na tela de projeção (com o mouse estendido) ou verifique nas configurações do Holyrics se o volume de "Mídia/Web" está alto. O código que fiz tem um "desbloqueador" de áudio, mas ele precisa que o arquivo esteja rodando.
