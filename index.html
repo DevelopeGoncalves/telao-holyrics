@@ -3,39 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TELÃO UNIFICADO (KIDS + CAR + RELÓGIO)</title>
+    <title>TELÃO UNIFICADO (KIDS + CAR) - SILENCIOSO</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         body { 
             margin: 0; padding: 0; 
-            /* CONFIGURAÇÃO DO FUNDO */
-            /* Se for usar arquivo local, mude para url('fundo.jpg') */
-            background: url('img/fundo.jpg') no-repeat center center fixed;
-            background-size: cover;
+            /* Fundo começa preto, a imagem é colocada pelo duplo clique */
             background-color: #000;
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
             
             overflow: hidden; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex; align-items: center; justify-content: center;
             height: 100vh; width: 100vw;
             cursor: none; /* Esconde o mouse */
-        }
-
-        /* --- NOVO: ESTILO DO RELÓGIO --- */
-        #clock-container {
-            position: absolute;
-            top: 30px;
-            right: 40px;
-            font-size: 5rem; /* Tamanho da hora */
-            font-weight: 800;
-            color: #fff;
-            text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
-            background: rgba(0,0,0,0.2); /* Fundo escuro transparente */
-            backdrop-filter: blur(5px);   /* Efeito de vidro */
-            padding: 5px 30px;
-            border-radius: 20px;
-            z-index: 5; /* Fica acima do fundo, mas abaixo do alerta */
-            border: 1px solid rgba(255,255,255,0.1);
         }
 
         /* CARD DE AVISO (BASE) */
@@ -135,9 +119,9 @@
         }
     </style>
 </head>
-<body onclick="enableAudioContext()">
+<body ondblclick="document.getElementById('bg-upload').click()">
 
-    <div id="clock-container">00:00</div>
+    <input type="file" id="bg-upload" accept="image/*" style="display: none;">
 
     <div id="alert-box" class="style-kids">
         <div class="alert-header" id="header-title">
@@ -163,25 +147,25 @@
         <div id="queue-indicator"><i class="fas fa-layer-group"></i> +<span id="queue-count">0</span> na fila</div>
     </div>
 
-    <audio id="alertSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
-
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <script>
-        // CONFIGURAÇÕES GERAIS
-        const TEMPO_EXIBICAO = 7000;
+        // --- LÓGICA DE UPLOAD DE IMAGEM DO FUNDO ---
+        document.getElementById('bg-upload').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.body.style.backgroundImage = `url('${e.target.result}')`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        // ------------------------------------------
 
-        // --- LÓGICA DO RELÓGIO (NOVO) ---
-        function updateClock() {
-            const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            document.getElementById('clock-container').innerText = `${hours}:${minutes}`;
-        }
-        setInterval(updateClock, 1000); // Atualiza a cada 1 segundo
-        updateClock(); // Roda na hora que abre
-        // --------------------------------
+        // CONFIGURAÇÕES GERAIS
+        const TEMPO_EXIBICAO = 5000; // Tempo que o alerta fica na tela em milissegundos (5000 = 7 segundos)
 
         const firebaseConfig = {
             apiKey: "AIzaSyBI5S5ciZioheWabi0W0Ii_r0e3RsYm3iw",
@@ -196,23 +180,9 @@
         if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
         const db = firebase.database();
 
-        let audioCtxEnabled = false;
-        const synth = window.speechSynthesis;
         let alertQueue = [];
         let isShowing = false;
         let processedKeys = new Set();
-
-        function enableAudioContext() {
-            if(audioCtxEnabled) return;
-            const audio = document.getElementById('alertSound');
-            audio.volume = 0; 
-            audio.play().then(() => {
-                audio.pause(); audio.currentTime = 0; audio.volume = 1;
-                audioCtxEnabled = true;
-                if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = getVoices;
-                getVoices();
-            }).catch(e => console.log("Aguardando clique..."));
-        }
 
         db.ref('chamados').on('child_added', (snapshot) => { handleNewAlert(snapshot, 'kid'); });
         db.ref('estacionamento').on('child_added', (snapshot) => { handleNewAlert(snapshot, 'car'); });
@@ -221,6 +191,7 @@
             const data = snapshot.val();
             const key = snapshot.key;
             const now = new Date().getTime();
+            // Pega chamados recentes (últimos 5 minutos)
             if (data.timestamp && (now - data.timestamp < 300000)) {
                 if(!processedKeys.has(key)) {
                     processedKeys.add(key);
@@ -270,12 +241,12 @@
                 infoBadge.innerText = data.model;
                 labelBottom.innerText = "Placa:";
                 mainName.innerHTML = `<span class="plate-text">${data.plate}</span>`;
-                playAlertSound(`Atenção proprietário do veículo ${data.model}, placa ${data.plate}. Compareça ao estacionamento.`);
             } else {
                 box.className = 'style-kids';
                 headerTitle.innerHTML = '<i class="fas fa-exclamation-circle"></i> ATENÇÃO PAIS';
                 carIconEl.style.display = 'none';
                 photoEl.style.display = 'block';
+                
                 let src = data.photoUrl;
                 if (!src.startsWith('http') && !src.startsWith('data:')) {
                     let cleanName = src.replace('img/', '');
@@ -283,15 +254,17 @@
                 }
                 photoEl.onerror = () => { photoEl.src = `https://ui-avatars.com/api/?name=${data.kidName}&background=random&size=300`; };
                 photoEl.src = src;
+                
                 labelTop.innerText = "Favor comparecer à:";
                 infoBadge.innerText = data.roomName;
                 labelBottom.innerText = "Responsável por:";
                 mainName.innerHTML = data.kidName;
-                playAlertSound(`Atenção pais. Solicitamos a presença do responsável por ${data.kidName}, na sala ${data.roomName}.`);
             }
+            
             box.classList.remove('fade-out');
             box.classList.add('fade-in');
             box.style.display = 'block';
+            
             setTimeout(() => { closeAlert(); }, TEMPO_EXIBICAO);
         }
 
@@ -304,25 +277,6 @@
                 isShowing = false;
                 processQueue();
             }, 600);
-        }
-
-        function getVoices() {
-            const voices = synth.getVoices();
-            return voices.find(v => v.name.includes('Google') && v.lang.includes('pt-BR')) || voices[0];
-        }
-
-        function playAlertSound(textToSpeak) {
-            const audio = document.getElementById('alertSound');
-            if(audioCtxEnabled) {
-                audio.play().catch(e => {});
-                setTimeout(() => {
-                    synth.cancel();
-                    const utterance = new SpeechSynthesisUtterance(textToSpeak);
-                    utterance.voice = getVoices();
-                    utterance.lang = 'pt-BR';
-                    synth.speak(utterance);
-                }, 1500);
-            }
         }
     </script>
 </body>
